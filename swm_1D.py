@@ -17,7 +17,7 @@ for i,g in enumerate(bat):
 h0=np.copy(bat)
 #h0=np.ones(bat.shape)*10
 eta0=np.zeros(h0.shape)
-eta0[1:21]=1.0
+eta0[0:20]=1.0
 eta0-=np.minimum(0,h0)
 h=h0+eta0
 #h0[gnd>10]=gnd[gnd>10]
@@ -39,8 +39,7 @@ g=9.81
 ku=2*g*dt/dx
 kh=2*dt/dx
 eps=0.05
-eps=0.01
-hmin=0.005
+hmin=0.15
 mu=dt*np.sqrt(g*h0)/dx
 print('mu:', mu)
 print('h0:', h0)
@@ -65,8 +64,8 @@ for n in np.arange(85.5/dt):
         idx_dry=np.asarray(h<hmin).nonzero()
         ucond=u[ni][1:]
         ucond[h<=hmin]=0
-        ucond[np.roll(h,-1)<=hmin]=0
-        ucond[np.roll(h,1)<=hmin]=0
+        #ucond[np.roll(h,-1)<=hmin]=0
+        #ucond[np.roll(h,1)<=hmin]=0
         #print('u1:')
         #print(u[ni])
         u[ni][1:]=ucond
