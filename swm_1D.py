@@ -1,32 +1,20 @@
 import numpy as np
 from matplotlib import pyplot as plt
+from netCDF4 import Dataset
+
+with Dataset("nc/isla.nc","r") as ifile:
+    η0=ifile["η0"][:]
+    h0=ifile["h0"][:]
+    xi=ifile["x"][:]
 
 #cantidad de puntos
-kcells=201
-#define nivel estable
-lvl0=10
-#define tierra
-bat =np.ones(kcells)*lvl0
-step=10.5/101
-for i,g in enumerate(bat):
-    if i<=100:
-        bat[i+1]=g-step
-    elif i<200:
-        bat[i+1]=g+step
-#define h0
-h0=np.copy(bat)
-#h0=np.ones(bat.shape)*10
-eta0=np.zeros(h0.shape)
-eta0[0:40]=1.0
-eta0-=np.minimum(0,h0)
-h=h0+eta0
-
-x=1010
+kcells=len(h0)
+h=h0+η0
 dx=5
 dt=0.01
 u=np.zeros((3,kcells+1))
 eta=np.zeros((3,kcells))
-eta[0]=eta0
+eta[0]=η0
 g=9.81
 ku=2*g*dt/dx
 kh=2*dt/dx
@@ -34,11 +22,7 @@ eps=0.03
 hmin=0.15
 mu=dt*np.sqrt(g*h0)/dx
 print('mu:', mu)
-print('h0:', h0)
 
-ini=0
-x= kcells*dx
-xi=np.arange(0,x,dx)
 plt.figure(figsize=(9,4))
 #pasos de tiempo
 for n in np.arange(500.5/dt):
@@ -91,7 +75,7 @@ for n in np.arange(500.5/dt):
         eta_plot[dry]=np.NaN
         plt.plot(xi, -h0, 'b')
         plt.plot(xi, eta_plot,'.r')
-        plt.axis([0, x, -1, 1.5])
+        plt.axis([0, kcells*dx, -1, 1.5])
         plt.title('t={}s, eps={}'.format(n*dt, eps))
         plt.plot(xi, u[ni][1:],'k')
         if n==0:
