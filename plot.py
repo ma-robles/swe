@@ -1,8 +1,9 @@
 from netCDF4 import Dataset
 from matplotlib import pyplot as plt
 import numpy as np
+import sys
 
-ifilename="isla_out.nc"
+ifilename=sys.argv[1]
 
 with Dataset(ifilename,"r") as ifile:
     h0=ifile["h0"][:]
@@ -14,7 +15,7 @@ with Dataset(ifilename,"r") as ifile:
         #crea η mas adecuada para graficación
         plt.plot(xi, -h0, 'b')
         plt.plot(xi, ifile["η"][i,:],'.r')
-        plt.axis([0, xi[-1], -1, 1.5])
+        #plt.axis([0, xi[-1], -1, 1.5])
         plt.title('t={}s'.format(t))
         plt.plot(xi, ifile["u"][i,1:],'k')
         if i==0:
