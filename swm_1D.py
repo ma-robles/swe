@@ -1,8 +1,8 @@
 import numpy as np
 from netCDF4 import Dataset
 
-ifilename="nc/isla.nc"
-ofilename="isla_out.nc"
+ifilename="nc/ladera.nc"
+ofilename="ladera_out.nc"
 
 with Dataset(ifilename,"r") as ifile:
     η0=ifile["η0"][:]
@@ -10,11 +10,17 @@ with Dataset(ifilename,"r") as ifile:
     xi=ifile["x"][:]
 
 #tipo de frontera
+#frontera para isla
 boundary_open= False
+#frontera para ladera
+boundary_open= True
 #constante para filtro
 ϵ=0.03
 #umbral para celdas secas
+#hmin para isla
 hmin=0.15
+#hmin para ladera
+hmin=0.0001
 dx=5
 dt=0.01
 g=9.81
@@ -28,7 +34,7 @@ h=h0+η0
 #μ=dt*np.sqrt(g*np.max(h0))/dx
 #print('μ=', μ)
 #tiempo de simulación[s]
-time_tot=100.5
+time_tot=400.5
 #divisor de tiempo para almacenar
 time_div=100
 
@@ -79,7 +85,10 @@ with Dataset(ofilename, 'w') as ofile:
         idx_dry=np.asarray(h<hmin).nonzero()[0]
         #celdas límites
         lim=(i for i in idx_dry if (h[i-1]>=hmin or h[i+1]>=hmin) )
-        lim = list(lim)
+        try:
+            lim = list(lim)
+        except IndexError:
+            pass
         #celdas secas
         dry = ( i for i in idx_dry if i not in lim)
         dry = list(dry)
@@ -94,4 +103,4 @@ with Dataset(ofilename, 'w') as ofile:
             var_η[n2,:]=η_plot
             #var_η[n2,:]=η[ni]
             var_u[n2,:]=u[ni]
-            print(n, var_t.shape, var_η.shape, var_u.shape)
+            #print(n, var_t.shape, var_η.shape, var_u.shape)
