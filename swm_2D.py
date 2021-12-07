@@ -28,8 +28,8 @@ khx=2*dt/dx
 khy=2*dt/dy
 xcells= h0.shape[0]
 ycells= h0.shape[1]
-u=np.zeros((3,xcells+1))
-v=np.zeros((3,ycells+1))
+u=np.zeros((3, xcells+1, ycells))
+v=np.zeros((3, xcells, ycells+1))
 η=np.zeros((3, xcells, ycells))
 η[0]=η0
 h=h0+η0
@@ -65,15 +65,21 @@ with Dataset(ofilename, 'w') as ofile:
         ni=int(n)%3
         if n!=0:
             if n==1:
-                u[1][1:-1]=u[0][1:-1]-ku*np.diff(η[0])/2
-                hu=h*u[0][1:]
-                hu=np.insert(hu,0, 0)
-                η[1]=η[0]-kh*np.diff(hu)/2
+                u[1][1:-1,:]=u[0][1:-1,:]-ku*np.diff(η[0])/2
+                v[1][:,1:-1]=v[0][:,1:-1]-ku*np.diff(η[0])/2
+                hu=h*u[0][1:,:]
+                hu=np.insert(hu,0, np.zeros(ycells), axis=0)
+                hv=h*v[0][:,1:]
+                hv=np.insert(hv,0, np.zeros(xcells), axis=1)
+                η[1]=η[0]-khx*np.diff(hu)/2+khy*np.diff(hv)/2
             elif n>1:
-                u[ni][1:-1]=u[ni-2][1:-1,:]-ku*np.diff(η[ni-2])
+                u[ni][1:-1,:]=u[ni-2][1:-1,:]-ku*np.diff(η[ni-2])
+                v[ni][:,1:-1]=v[ni-2][:,1:-1]-ku*np.diff(η[ni-2])
                 hu=h*u[ni-2][1:,:]
-                hu=np.insert(hu,0, np.zeros(ycells), axis=1)
-                η[ni]=η[ni-2]-kh*np.diff(hu)
+                hu=np.insert(hu,0, np.zeros(ycells), axis=0)
+                hv=h*v[ni-2][:,1:]
+                hv=np.insert(hv,0, np.zeros(xcells), axis=1)
+                η[ni]=η[ni-2]-khx*np.diff(hu)+khy*np.diff(hv)
             if boundary_open==False:
                 u[ni][0]=0
                 u[ni][-1]=0
