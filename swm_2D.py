@@ -8,27 +8,29 @@ with Dataset(ifilename,"r") as ifile:
     η0=ifile["η0"][:]
     h0=ifile["h0"][:]
     xi=ifile["x"][:]
+    yi=ifile["y"][:]
 
 #tipo de frontera
 #frontera para isla
 boundary_open= False
-#frontera para ladera
-boundary_open= True
 #constante para filtro
 ϵ=0.03
 #umbral para celdas secas
 #hmin para isla
 hmin=0.15
-#hmin para ladera
-hmin=0.0001
 dx=5
+dy=5
 dt=0.01
 g=9.81
 ku=2*g*dt/dx
-kh=2*dt/dx
-kcells=len(h0)
-u=np.zeros((3,kcells+1))
-η=np.zeros((3,kcells))
+kv=2*g*dt/dy
+khx=2*dt/dx
+khy=2*dt/dy
+xcells= h0.shape[0]
+ycells= h0.shape[1]
+u=np.zeros((3,xcells+1))
+v=np.zeros((3,ycells+1))
+η=np.zeros((3, xcells, ycells))
 η[0]=η0
 h=h0+η0
 #μ=dt*np.sqrt(g*np.max(h0))/dx
@@ -39,16 +41,24 @@ time_tot=400.5
 time_div=100
 
 with Dataset(ofilename, 'w') as ofile:
-    ofile.description="salida de script swe"
+    ofile.description="salida de script swe 2D"
     dim_t= ofile.createDimension("time", None)
-    dim_h= ofile.createDimension("h", len(h))
-    dim_u= ofile.createDimension("u", u.shape[1])
+    dim_x= ofile.createDimension("x", xcells)
+    dim_y= ofile.createDimension("y", ycells)
+    dim_xstag= ofile.createDimension("x_stag", xcells+1)
+    dim_ystag= ofile.createDimension("y_stag", ycells+1)
+
     var_t= ofile.createVariable('time', 'f8', ("time",))
-    var_x= ofile.createVariable('x', 'f8', ("h",))
-    var_h0= ofile.createVariable('h0', 'f8', ("h",))
-    var_η= ofile.createVariable('η', 'f8', ("time","h"))
-    var_u= ofile.createVariable('u', 'f8', ("time", "u"))
+    var_x= ofile.createVariable('x', 'f8', ("x",))
+    var_y= ofile.createVariable('y', 'f8', ("y",))
+    var_h0= ofile.createVariable('h0', 'f8', ("x","y"))
+    var_η= ofile.createVariable('η', 'f8', ("time","x", "y"))
+    var_u= ofile.createVariable('u', 'f8', 
+            ("time", "x_stag", "y"))
+    var_v= ofile.createVariable('v', 'f8', 
+            ("time", "x", "y_stag"))
     var_x[:]=xi
+    var_y[:]=yi
     var_h0[:]=h0
     print(var_t.shape, var_η.shape, var_u.shape)
     for n in np.arange(time_tot/dt):
@@ -60,9 +70,9 @@ with Dataset(ofilename, 'w') as ofile:
                 hu=np.insert(hu,0, 0)
                 η[1]=η[0]-kh*np.diff(hu)/2
             elif n>1:
-                u[ni][1:-1]=u[ni-2][1:-1]-ku*np.diff(η[ni-2])
-                hu=h*u[ni-2][1:]
-                hu=np.insert(hu,0, 0)
+                u[ni][1:-1]=u[ni-2][1:-1,:]-ku*np.diff(η[ni-2])
+                hu=h*u[ni-2][1:,:]
+                hu=np.insert(hu,0, np.zeros(ycells), axis=1)
                 η[ni]=η[ni-2]-kh*np.diff(hu)
             if boundary_open==False:
                 u[ni][0]=0
